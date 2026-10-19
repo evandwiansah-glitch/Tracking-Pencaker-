@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Tracker Lamaran Kerja Final</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,sans-serif}
+body{background:#0f172a;color:#fff}
+.header{position:fixed;top:0;left:0;right:0;height:60px;background:#1e293b;display:flex;align-items:center;padding:0 15px;z-index:1000}
+.menu{font-size:28px;cursor:pointer;margin-right:10px}
+.sidebar{position:fixed;left:-280px;top:0;width:280px;height:100%;background:#020617;transition:.3s;z-index:2000;padding-top:70px;overflow-y:auto}
+.sidebar.active{left:0}
+.sidebar a{display:block;padding:15px 20px;color:#fff;text-decoration:none;border-bottom:1px solid #1e293b}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1500}
+.overlay.active{display:block}
+.main{padding:75px 15px;padding-bottom:80px !important}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.card{background:#1e293b;padding:15px;border-radius:15px;margin-bottom:12px}
+.stat{text-align:center}
+.stat h2{font-size:26px}
+input,select,textarea{width:100%;padding:10px;margin:5px 0;border:none;border-radius:10px;background:#334155;color:#fff}
+button{padding:10px 15px;border:none;border-radius:10px;cursor:pointer}
+.btn{background:#22c55e;color:#fff;font-weight:bold}
+.progress{height:18px;background:#334155;border-radius:20px;overflow:hidden;margin:10px 0}
+.bar{height:100%;background:#22c55e;width:0%;transition:0.3s}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #334155;padding:8px;font-size:12px;text-align:left}
+th{background:#1e293b}
+.fab{position:fixed;right:20px;bottom:20px;width:60px;height:60px;border-radius:50%;background:#22c55e;color:#fff;font-size:32px;display:flex;justify-content:center;align-items:center;z-index:9999;cursor:pointer}
+.hidden{display:none !important}
+.btnEdit{background:#3b82f6;color:#fff;padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:11px;margin-right:4px}
+.btnHapus{background:#dc2626;color:#fff;padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:11px}
+.sMenunggu,.sTes,.sInterview,.sDiterima,.sDitolak,.sArsip,.sDibatalkan{color:#fff;padding:4px 8px;border-radius:8px;font-size:11px;display:inline-block}
+.sMenunggu{background:#64748b}
+.sTes{background:#2563eb}
+.sInterview{background:#ca8a04}
+.sDiterima{background:#16a34a}
+.sDitolak{background:#dc2626}
+.sArsip{background:#475569}
+.sDibatalkan{background:#b91c1c}
+.glass{background:rgba(30,41,59,.8);backdrop-filter:blur(10px)}
+.quote-card{font-style:italic;text-align:center;min-height:50px}
+#splashPremium{position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;justify-content:center;align-items:center;color:white}
+.logoGlow{width:90px;height:90px;border-radius:50%;background:#22c55e;box-shadow:0 0 30px #22c55e;animation:pulse 1.5s infinite}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+.loadbar{width:220px;height:8px;background:#334155;border-radius:20px;overflow:hidden;margin-top:20px}
+.loadbar div{height:100%;background:#22c55e;width:0;animation:loading 2s forwards}
+@keyframes loading{to{width:100%}}
+#quickMenu{display:none;position:fixed;right:25px;bottom:110px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:9999}
+.quick-btn{background:#22c55e;color:#fff;border:none;border-radius:25px;padding:12px 18px;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,.3);cursor:pointer}
+.job-item{background:#0f172a;border:1px solid #334155;border-radius:12px;padding:12px;margin-bottom:10px}
+.job-header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.job-name{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis}
+.job-actions{display:flex;gap:8px;margin-top:8px}
+.edit-btn,.delete-btn{border:none;border-radius:10px;padding:7px 12px;color:#fff;font-size:13px;cursor:pointer}
+.edit-btn{background:#2563eb}
+.delete-btn{background:#dc2626}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px}
+.ach-card{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px;text-align:center;font-size:12px;opacity:0.4}
+.ach-card.unlocked{opacity:1;border-color:#22c55e;background:#1e3a2f}
+.ach-icon{font-size:24px;margin-bottom:5px}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:10px}
+.calendar-day{background:#0f172a;border:1px solid #334155;min-height:55px;padding:4px;font-size:11px;border-radius:4px;position:relative;cursor:pointer}
+.calendar-day.has-event{border:1px solid #ca8a04;background:#2d2006}
+.calendar-day.today{border:2px solid #22c55e}
+.calendar-header{font-weight:bold;text-align:center;padding:4px 0;font-size:12px;background:#334155;border-radius:4px}
+.badge-count{float:right;background:#334155;padding:3px 10px;border-radius:20px;font-size:11px}
+.link-action{color:#3b82f6;text-decoration:none;font-weight:bold}
+.link-action:hover{text-decoration:underline}
+#setupPage{position:fixed;inset:0;background:#0f172a;z-index:99998;display:flex;justify-content:center;align-items:center;padding:20px}
+.setup-card{background:#1e293b;padding:25px;border-radius:20px;width:100%;max-width:400px;box-shadow:0 10px 25px rgba(0,0,0,0.5)}
+.history-list{max-height:150px;overflow-y:auto;background:#0f172a;padding:8px;border-radius:8px;font-size:11px;margin-top:5px}
+.history-item{padding:4px 0;border-bottom:1px solid #1e293b}
+</style>
+</head>
+<body>
+
+<div id="splashPremium">
+<div class="logoGlow"></div>
+<h1 style="margin-top:20px">TRACKER LAMARAN</h1>
+<p>Persiapkan masa depanmu</p>
+<div class="loadbar"><div></div></div>
+</div>
+
+<div id="setupPage" class="hidden">
+<div class="setup-card">
+<h2 style="margin-bottom:10px; text-align:center;">🎯 Setup Profil & Target</h2>
+<p style="font-size:13px; color:#94a3b8; margin-bottom:20px; text-align:center;">Masukkan nama dan target lamaran harian Anda untuk memulai.</p>
+<label>Nama Pengguna</label>
+<input id="setupNama" placeholder="Masukkan nama Anda...">
+<label style="margin-top:10px; display:block;">Target Lamaran Harian</label>
+<input id="setupTargetHarian" type="number" min="1" value="5" placeholder="Contoh: 5">
+<button class="btn" style="width:100%; margin-top:20px;" onclick="saveSetup()">Mulai Sekarang</button>
+</div>
+</div>
+
+<div class="header">
+<div class="menu" onclick="openMenu()">☰</div>
+<b style="cursor:pointer" onclick="showPage('dashboard')">Tracker Lamaran Kerja <span id="userGreeting" style="font-size:12px; font-weight:normal; color:#a3e635; margin-left:8px;"></span></b>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+
+<div class="sidebar" id="sidebar">
+<a href="#" onclick="showPage('dashboard')">📊 Dashboard</a>
+<a href="#" onclick="showPage('lamaran')">📋 Semua Lamaran</a>
+<a href="#" onclick="showPage('jadwal')">📅 Jadwal & Kalender</a>
+<a href="#" onclick="showPage('emailPage')">📧 Cek Email</a>
+<div style="padding:15px 20px; color:#94a3b8; font-size:12px; font-weight:bold; background:#0f172a;">DATA TERSIMPAN</div>
+<a href="#" onclick="showPage('bkkPage')">🏫 Lamaran BKK <span id="bkkCount" class="badge-count">0</span></a>
+<a href="#" onclick="showPage('emailLamaranPage')">📩 Lamaran Email <span id="emailCount" class="badge-count">0</span></a>
+<a href="#" onclick="showPage('webPage')">🌐 Website/Formulir <span id="webCount" class="badge-count">0</span></a>
+<a href="#" onclick="showPage('arsipPage')">🗄️ Arsip Lamaran <span id="arsipCount" class="badge-count">0</span></a>
+<a href="#" onclick="showPage('dokumen')">📁 Dokumen</a>
+<a href="#" onclick="exportData()">💾 Backup Data</a>
+<a href="#" onclick="document.getElementById('importFile').click()">📂 Restore Data</a>
+<input type="file" id="importFile" accept=".json" style="display:none">
+</div>
+
+<div class="main">
+
+<div id="dashboard">
+<div class="card glass quote-card" id="motivasiBox">
+"Setiap lamaran adalah satu peluang lebih dekat ke pekerjaan impian."
+<br><span style="font-size:11px; color:#94a3b8; font-weight:normal;">— by Evan</span>
+</div>
+
+<div class="card">
+<h3 style="margin-bottom:8px; font-size:14px; display:flex; justify-content:space-between; align-items:center;">
+<span>🎯 Target Harian</span>
+<button onclick="ubahTargetHarianDialog()" style="padding:2px 8px; font-size:11px; background:#3b82f6; color:#fff; border-radius:5px;">Ubah</button>
+</h3>
+<div style="font-size:15px; font-weight:bold;" id="targetHarianStatusText">Target Harian: 0</div>
+<div class="progress"><div class="bar" id="barHarian" style="background:#a3e635; width:0%;"></div></div>
+<p id="progressHarianText" style="font-size:12px; color:#94a3b8;">0 / 0</p>
+</div>
+
+<div class="grid">
+<div class="card stat"><h2 id="total">0</h2>Total</div>
+<div class="card stat"><h2 id="tes">0</h2>Tes</div>
+<div class="card stat"><h2 id="interview">0</h2>Interview</div>
+<div class="card stat"><h2 id="diterima">0</h2>Diterima</div>
+<div class="card stat"><h2 id="menunggu">0</h2>Menunggu</div>
+<div class="card stat"><h2 id="ditolak">0</h2>Ditolak</div>
+</div>
+
+<div class="card">
+<h3>📊 Statistik Jalur Lamaran</h3>
+<table style="margin-top:5px;">
+<thead><tr><th>Jalur</th><th>Jumlah</th><th>Persentase</th></tr></thead>
+<tbody id="tbodyStatJalur"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h3>🏆 Sistem Pencapaian (Achievements)</h3>
+<div class="ach-grid" id="achievementsGrid"></div>
+</div>
+
+<div class="card">
+<h3>🎯 Target Total 300 Lamaran</h3>
+<div class="progress"><div class="bar" id="bar"></div></div>
+<p id="progressText">0 / 300</p>
+</div>
+</div>
+
+<div id="lamaran" class="hidden">
+<div class="card">
+<h3 id="formTitle">Tambah / Edit Lamaran</h3>
+<input id="pt" placeholder="Nama PT">
+<input id="posisi" value="Operator Produksi" placeholder="Posisi Jabatan">
+<input id="tgl" type="datetime-local">
+<select id="status">
+<option value="Menunggu">Menunggu</option>
+<option value="Tes">Tes</option>
+<option value="Interview">Interview</option>
+<option value="Diterima">Diterima</option>
+<option value="Ditolak">Ditolak</option>
+<option value="Dibatalkan">Dibatalkan</option>
+</select>
+<select id="jalur" onchange="adjustPlaceholderTujuan()">
+<option value="">Pilih Jalur Lamaran</option>
+<option value="BKK">BKK</option>
+<option value="Email">Email</option>
+<option value="Website">Website</option>
+<option value="Formulir">Formulir</option>
+</select>
+<input id="emailTujuan" placeholder="Email HRD / Nama BKK / Link Form">
+<button class="btn" onclick="addData()">Simpan</button>
+</div>
+
+<div class="card">
+<input id="searchPT" placeholder="Cari Nama PT..." onkeyup="render()">
+<select id="filterStatus" onchange="render()" style="margin-bottom:8px;">
+<option value="">Semua Status (Aktif)</option>
+<option value="Menunggu">Menunggu</option>
+<option value="Tes">Tes</option>
+<option value="Interview">Interview</option>
+<option value="Diterima">Diterima</option>
+<option value="Ditolak">Ditolak</option>
+<option value="Dibatalkan">Dibatalkan</option>
+<option value="Arsip">Semua Arsip</option>
+</select>
+<select id="filterJalur" onchange="render()">
+<option value="">Semua Jalur</option>
+<option value="BKK">BKK</option>
+<option value="Email">Email</option>
+<option value="Website">Website</option>
+<option value="Formulir">Formulir</option>
+</select>
+<div id="tbody" style="margin-top:10px;"></div>
+</div>
+</div>
+
+<div id="jadwal" class="hidden">
+<div class="card">
+<h3>📅 Jadwal Tes & Interview</h3>
+<div id="notif14hari"></div>
+<div id="notifReminder" style="margin-bottom:8px;"></div>
+<table>
+<thead><tr><th>PT</th><th>Tanggal</th><th>Status</th></tr></thead>
+<tbody id="tbodyJadwal"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h3>🗓️ Kalender Kegiatan</h3>
+<div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+<button onclick="changeMonth(-1)" style="padding:4px 10px; background:#334155; color:#fff; border:none; border-radius:5px; cursor:pointer;"><</button>
+<h4 id="calendarMonthTitle">Juli 2026</h4>
+<button onclick="changeMonth(1)" style="padding:4px 10px; background:#334155; color:#fff; border:none; border-radius:5px; cursor:pointer;">></button>
+</div>
+<div class="calendar-grid" id="calendarGridHeader"></div>
+<div class="calendar-grid" id="calendarGridBody"></div>
+<div id="calendarDayDetails" style="margin-top:12px; font-size:12px; background:#0f172a; padding:10px; border-radius:8px;" class="hidden"></div>
+</div>
+</div>
+
+<div id="emailPage" class="hidden">
+<div class="card">
+<h3>📧 Cek Email Hari Ini</h3>
+<label><input type="checkbox" id="gmailCheck" onchange="saveEmailCheck()"> Gmail</label><br>
+<label><input type="checkbox" id="yahooCheck" onchange="saveEmailCheck()"> Yahoo</label><br>
+<label><input type="checkbox" id="outlookCheck" onchange="saveEmailCheck()"> Outlook</label><br><br>
+<p id="lastCheck">Belum ada pengecekan hari ini.</p>
+<br>
+<button class="btn" onclick="bukaGmail()">📧 Buka Gmail</button>
+</div>
+</div>
+
+<div id="bkkPage" class="hidden">
+<div class="card">
+<h3>🏫 Lamaran Jalur BKK</h3>
+<table>
+<thead><tr><th>Nama PT</th><th>Nama BKK</th><th>Posisi</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="tbodyBkk"></tbody>
+</table>
+</div>
+</div>
+
+<div id="emailLamaranPage" class="hidden">
+<div class="card">
+<h3>📩 Lamaran Jalur Email</h3>
+<table>
+<thead><tr><th>Nama PT</th><th>Email HRD</th><th>Posisi</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="tbodyEmail"></tbody>
+</table>
+</div>
+</div>
+
+<div id="webPage" class="hidden">
+<div class="card">
+<h3>🌐 Website / Formulir</h3>
+<table>
+<thead><tr><th>Nama PT</th><th>Link Tautan</th><th>Posisi</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="tbodyWeb"></tbody>
+</table>
+</div>
+</div>
+
+<div id="arsipPage" class="hidden">
+<div class="card">
+<h3>🗄️ Arsip Lamaran (Diterima / Ditolak / Dibatalkan)</h3>
+<table>
+<thead><tr><th>Nama PT</th><th>Jalur</th><th>Posisi</th><th>Status</th><th>Aksi</th></tr></thead>
+<tbody id="tbodyArsip"></tbody>
+</table>
+</div>
+</div>
+
+<div id="dokumen" class="hidden">
+<div class="card">
+<h3>📁 Checklist Dokumen</h3>
+<label><input type="checkbox" class="docCheck" data-doc="cv"> CV</label><br>
+<label><input type="checkbox" class="docCheck" data-doc="ktp"> KTP</label><br>
+<label><input type="checkbox" class="docCheck" data-doc="kk"> KK</label><br>
+<label><input type="checkbox" class="docCheck" data-doc="ijazah"> Ijazah</label><br>
+<label><input type="checkbox" class="docCheck" data-doc="skck"> SKCK</label><br>
+<label><input type="checkbox" class="docCheck" data-doc="npwp"> NPWP</label><br>
+<button class="btn" onclick="resetSemua()" style="background:#dc2626; margin-top:15px;">Reset Semua Data</button>
+</div>
+</div>
+
+</div>
+
+<div id="quickMenu">
+<button class="quick-btn" onclick="showPage('lamaran');closeQuickMenu();">📋 Tambah Lamaran</button>
+<button class="quick-btn" onclick="showPage('jadwal');closeQuickMenu();">📅 Tambah Jadwal Tes</button>
+</div>
+<div class="fab" onclick="toggleQuickMenu()">+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbwFYzWDxWGR_q3IooY0zXULVsUxKEGLNjs0Mu5FBs_nNkICXAe6254ImVyCe46RPiTs/exec";
+
+let data = JSON.parse(localStorage.getItem('trackerFinal')) || JSON.parse(localStorage.getItem('trackerBackup')) || [];
+let currentCalendarDate = new Date();
+
+const motivasiList = [
+    "Setiap lamaran adalah satu peluang lebih dekat ke pekerjaan impian.",
+    "Kegagalan hari ini adalah persiapan untuk keberhasilan besok.",
+    "Tetap konsisten, proses tidak akan pernah mengkhianati hasil.",
+    "Jangan berhenti saat lelah, berhentilah saat kamu telah selesai.",
+    "Kesuksesan adalah hasil dari persiapan, kerja keras, dan belajar dari kegagalan.",
+    "Pintu yang tertutup akan digantikan dengan pintu yang jauh lebih baik.",
+    "Masa depanmu ditentukan oleh apa yang kamu lakukan hari ini.",
+    "Tetap semangat, rezeki tidak akan tertukar dengan orang lain.",
+    "Fokus pada proses, nikmati perjalanan, petik hasilnya nanti.",
+    "Setiap usaha keras yang kamu lakukan hari ini adalah investasi masa depan.",
+    "Satu penolakan berarti satu langkah lebih dekat ke jawaban 'YA'.",
+    "Jadikan setiap interview sebagai sarana belajar dan melatih diri.",
+    "Jangan kurangi targetmu, tingkatkan usahamu dan kemampuanmu.",
+    "Percaya pada dirimu sendiri, kamu memiliki potensi tersembunyi.",
+    "Kerja keras mengalahkan bakat ketika bakat tidak bekerja keras.",
+    "Kesempatan besar selalu datang kepada mereka yang terus mencoba.",
+    "Jangan pernah menyerah, keajaiban terjadi setiap hari.",
+    "Setiap langkah kecil yang kamu ambil hari ini membawa perubahan besar esok.",
+    "Badai pasti berlalu, persiapkan dirimu menyambut pelangi kesuksesan.",
+    "Keberhasilan bukanlah akhir, kegagalan bukanlah hal fatal: keberanian untuk melanjutkanlah yang utama.",
+    "Kamu lebih kuat dari yang kamu kira, teruslah melangkah maju.",
+    "Waktu yang tepat akan datang bagi mereka yang sabar dan terus berjuang.",
+    "Lakukan yang terbaik hari ini agar tidak ada penyesalan di kemudian hari.",
+    "Tantangan adalah sebuah peluang tersembunyi untuk membuktikan kemampuanmu.",
+    "Hari baru membawa kekuatan baru, pikiran baru, dan kesempatan baru.",
+    "Mimpi tidak akan menjadi kenyataan melalui sihir; itu membutuhkan keringat, tekad, dan kerja keras.",
+    "Jangan bandingkan prosesmu dengan orang lain, setiap orang punya jalurnya sendiri.",
+    "Optimisme adalah kepercayaan yang mengarah pada pencapaian.",
+    "Disiplin adalah jembatan antara cita-cita dan pencapaian nyata.",
+    "Yakinlah, akhir dari perjuangan ini akan berbuah manis luar biasa."
+];
+
+function checkSetup(){
+    const config = JSON.parse(localStorage.getItem('trackerConfig'));
+    if(!config || !config.nama || !config.targetHarian){
+        document.getElementById('setupPage').classList.remove('hidden');
+    } else {
+        document.getElementById('setupPage').classList.add('hidden');
+        document.getElementById('userGreeting').innerText = `| Halo, ${config.nama}!`;
+        checkDailyReset();
+    }
+}
+
+function saveSetup(){
+    const nama = document.getElementById('setupNama').value.trim();
+    const target = parseInt(document.getElementById('setupTargetHarian').value);
+    if(!nama){alert('Nama tidak boleh kosong'); return;}
+    if(!target || target < 1){alert('Target harian minimal 1'); return;}
+    
+    const config = {
+        nama: nama,
+        targetHarian: target,
+        lastTargetUpdate: Date.now()
+    };
+    localStorage.setItem('trackerConfig', JSON.stringify(config));
+    
+    const harian = {
+        tanggal: new Date().toLocaleDateString('id-ID'),
+        count: 0
+    };
+    localStorage.setItem('trackerHarian', JSON.stringify(harian));
+    
+    document.getElementById('setupPage').classList.add('hidden');
+    document.getElementById('userGreeting').innerText = `| Halo, ${nama}!`;
+    render();
+}
+
+function checkDailyReset(){
+    const todayStr = new Date().toLocaleDateString('id-ID');
+    let harian = JSON.parse(localStorage.getItem('trackerHarian'));
+    if(!harian || harian.tanggal !== todayStr){
+        harian = {
+            tanggal: todayStr,
+            count: 0
+        };
+        localStorage.setItem('trackerHarian', JSON.stringify(harian));
+    }
+}
+
+function ubahTargetHarianDialog(){
+    let config = JSON.parse(localStorage.getItem('trackerConfig'));
+    if(!config) return;
+    const sekarang = Date.now();
+    const jedaWaktu = 7 * 24 * 60 * 60 * 1000;
+    if(config.lastTargetUpdate && (sekarang - config.lastTargetUpdate < jedaWaktu)){
+        const sisaHari = Math.ceil((jedaWaktu - (sekarang - config.lastTargetUpdate)) / (24 * 60 * 60 * 1000));
+        alert(`Target harian hanya bisa diubah 1x setiap 7 hari. Tunggu ${sisaHari} hari lagi.`);
+        return;
+    }
+    let baru = prompt("Masukkan target lamaran harian yang baru:", config.targetHarian);
+    if(baru === null) return;
+    let nBaru = parseInt(baru);
+    if(!nBaru || nBaru < 1){alert("Target tidak valid!"); return;}
+    config.targetHarian = nBaru;
+    config.lastTargetUpdate = sekarang;
+    localStorage.setItem('trackerConfig', JSON.stringify(config));
+    render();
+}
+
+function adjustPlaceholderTujuan(){
+    const jalur = document.getElementById('jalur').value;
+    const el = document.getElementById('emailTujuan');
+    if(!el) return;
+    if(jalur === 'Email') el.placeholder = "Contoh: hrd@perusahaan.com";
+    else if(jalur === 'BKK') el.placeholder = "Nama BKK, Contoh: BKK Karya Tama";
+    else if(jalur === 'Website' || jalur === 'Formulir') el.placeholder = "Link URL Tautan, Contoh: https://link.com";
+    else el.placeholder = "Email HRD / Nama BKK / Link Form";
+}
+
+function getDayRotationQuote(){
+    const d = new Date();
+    const index = (d.getDate() + d.getMonth()) % motivasiList.length;
+    return motivasiList[index];
+}
+
+function openMenu(){
+document.getElementById('sidebar').classList.add('active');
+document.getElementById('overlay').classList.add('active');
+}
+function closeMenu(){
+document.getElementById('sidebar').classList.remove('active');
+document.getElementById('overlay').classList.remove('active');
+}
+function showPage(id){
+[
+  'dashboard',
+  'lamaran',
+  'jadwal',
+  'emailPage',
+  'bkkPage',
+  'emailLamaranPage',
+  'webPage',
+  'arsipPage',
+  'dokumen'
+].forEach(x => {
+const el = document.getElementById(x);
+if(el) el.classList.add('hidden');
+});
+const targetEl = document.getElementById(id);
+if(targetEl) targetEl.classList.remove('hidden');
+closeMenu();
+if(id === 'jadwal') {
+    renderCalendar();
+}
+}
+function save(){
+localStorage.setItem('trackerFinal', JSON.stringify(data));
+localStorage.setItem('trackerBackup', JSON.stringify(data));
+}
+
+function saveStatusHistory(pt, status){
+    let history = JSON.parse(localStorage.getItem('trackerStatusHistory')) || [];
+    history.push({
+        pt: pt,
+        status: status,
+        waktu: new Date().toLocaleString('id-ID')
+    });
+    localStorage.setItem('trackerStatusHistory', JSON.stringify(history));
+}
+
+function addData(){
+const ptEl=document.getElementById('pt');
+const posisiEl=document.getElementById('posisi');
+const tglEl=document.getElementById('tgl');
+const statusEl=document.getElementById('status');
+const jalurEl=document.getElementById('jalur');
+const emailEl=document.getElementById('emailTujuan');
+
+const pt=ptEl.value.trim();
+const posisiVal=posisiEl.value.trim() || 'Operator Produksi';
+const bad=/^(test|asdf|qwerty|abc|zzz|a|aa)$/i;
+if(!/^(?=.*[A-Za-z])[A-Za-z0-9 .&()-]{2,}$/.test(pt)||bad.test(pt)){alert('Nama PT tidak valid');return;}
+if(!tglEl.value){alert('Isi tanggal & waktu');return;}
+if(!jalurEl.value){alert('Pilih jalur lamaran');return;}
+const tujuan=emailEl.value.trim();if(!tujuan){alert('Isi tujuan');return;}if(jalurEl.value==='Email'&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(tujuan)){alert('Email tidak valid');return;}if((jalurEl.value==='Website'||jalurEl.value==='Formulir')&&!/^https?:\/\//.test(tujuan)){alert('URL harus diawali http:// atau https://');return;}if(jalurEl.value==='BKK'&&tujuan.length<3){alert('Nama BKK minimal 3 karakter');return;}
+
+if(window.editIndex !== undefined){
+const oldStatus = data[window.editIndex].status;
+data[window.editIndex]={
+...data[window.editIndex],
+pt:pt,
+posisi:posisiVal,
+tgl:tglEl.value,
+status:statusEl.value,
+jalur:jalurEl.value,
+emailTujuan:tujuan
+};
+if(oldStatus !== statusEl.value){
+    saveStatusHistory(pt, statusEl.value);
+}
+window.editIndex = undefined;
+document.getElementById('formTitle').innerText = "Tambah / Edit Lamaran";
+}else{
+data.push({
+id:Date.now(),
+pt:pt,
+posisi:posisiVal,
+tgl:tglEl.value,
+status:statusEl.value,
+jalur:jalurEl.value,
+emailTujuan:tujuan
+});
+saveStatusHistory(pt, statusEl.value);
+
+checkDailyReset();
+let harian = JSON.parse(localStorage.getItem('trackerHarian'));
+harian.count += 1;
+localStorage.setItem('trackerHarian', JSON.stringify(harian));
+}
+
+save();
+
+if(typeof emailjs !== 'undefined') {
+emailjs.send("service_x364yhr", "template_tcdz981", {
+pt:pt,
+posisi:posisiVal,
+tanggal:tglEl.value,
+status:statusEl.value,
+jalur:jalurEl.value,
+email:tujuan
+})
+.then(()=>console.log("Email berhasil dikirim"))
+.catch(err=>console.log(err));
+}
+
+render();
+
+ptEl.value='';
+posisiEl.value='Operator Produksi';
+tglEl.value='';
+statusEl.value='Menunggu';
+jalurEl.value='';
+emailEl.value='';
+
+ptEl.focus();
+alert('✅ Lamaran berhasil disimpan');
+}
+
+function editData(i){
+document.getElementById('pt').value = data[i].pt || '';
+document.getElementById('posisi').value = data[i].posisi || 'Operator Produksi';
+document.getElementById('tgl').value = data[i].tgl || '';
+document.getElementById('status').value = data[i].status || 'Menunggu';
+document.getElementById('jalur').value = data[i].jalur || '';
+document.getElementById('emailTujuan').value = data[i].emailTujuan || '';
+document.getElementById('formTitle').innerText = "Edit Lamaran";
+window.editIndex = i; 
+showPage('lamaran');
+}
+
+function hapus(i){if(confirm('Yakin ingin menghapus data ini?')){data.splice(i,1);save();render();}}
+
+function render(){
+const tbody = document.getElementById('tbody');
+const tbodyBkk = document.getElementById('tbodyBkk');
+const tbodyEmail = document.getElementById('tbodyEmail');
+const tbodyWeb = document.getElementById('tbodyWeb');
+const tbodyArsip = document.getElementById('tbodyArsip');
+const tbodyJ = document.getElementById('tbodyJadwal');
+
+if(tbody) tbody.innerHTML='';
+if(tbodyBkk) tbodyBkk.innerHTML='';
+if(tbodyEmail) tbodyEmail.innerHTML='';
+if(tbodyWeb) tbodyWeb.innerHTML='';
+if(tbodyArsip) tbodyArsip.innerHTML='';
+if(tbodyJ) tbodyJ.innerHTML='';
+
+let tes=0, interview=0, diterima=0, menunggu=0, ditolak=0;
+let bkkCount=0, emailCount=0, webCount=0, arsipCount=0;
+
+const keyword=(document.getElementById('searchPT')?.value||'').toLowerCase();
+const filter=(document.getElementById('filterStatus')?.value||'');
+const filterJalur=(document.getElementById('filterJalur')?.value||'');
+
+const sortedData=data.slice().reverse();
+const jadwalList=data.filter(x=>x.status=='Tes'||x.status=='Interview')
+.sort((a,b)=>new Date(a.tgl||0)-new Date(b.tgl||0));
+
+const motBox = document.getElementById('motivasiBox');
+if(motBox) {
+    motBox.innerHTML = `"${getDayRotationQuote()}" <br><span style="font-size:11px; color:#94a3b8; font-weight:normal;">— by Evan</span>`;
+}
+
+sortedData.forEach((x)=>{ 
+const i=data.indexOf(x);
+if(keyword && !(x.pt||'').toLowerCase().includes(keyword)) return;
+
+const isArchivedStatus = (x.status === 'Diterima' || x.status === 'Ditolak' || x.status === 'Dibatalkan');
+
+if(filter === 'Arsip') {
+    if(!isArchivedStatus) return;
+} else if(filter) {
+    if(x.status !== filter) return;
+} else {
+    if(isArchivedStatus && !keyword) return; 
+}
+
+if(filterJalur && x.jalur !== filterJalur) return;
+
+let displayStatus = x.status || 'Menunggu';
+
+if(tbody) {
+tbody.innerHTML += `
+<div class="job-item">
+<div class="job-header">
+<div class="job-name">${x.pt||'-'} <span style="font-size:11px; font-weight:normal; color:#94a3b8;">(${x.posisi || 'Operator Produksi'})</span></div>
+<span class="s${displayStatus}">${displayStatus}</span>
+</div>
+<div style="font-size:11px; color:#94a3b8; margin-top:4px;">Jalur: ${x.jalur || '-'} | Tujuan: ${x.emailTujuan || '-'}</div>
+<div class="job-actions">
+<button class="edit-btn" onclick="editData(${i})">✏ Edit</button>
+<button class="delete-btn" onclick="hapus(${i})">🗑 Hapus</button>
+</div>
+</div>`;
+}
+});
+
+data.forEach((x, index) => {
+    let stat = x.status || 'Menunggu';
+    if(stat=='Tes') tes++;
+    if(stat=='Interview') interview++;
+    if(stat=='Diterima') diterima++; 
+    if(stat=='Menunggu') menunggu++; 
+    if(stat=='Ditolak') ditolak++;
+    
+    const isArchived = (stat === 'Diterima' || stat === 'Ditolak' || stat === 'Dibatalkan');
+    if(isArchived) arsipCount++;
+
+    let waitingDays = 0;
+    if(x.tgl) {
+        const diffTime = Date.now() - new Date(x.tgl).getTime();
+        waitingDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+    const labelWaiting = waitingDays > 0 ? ` (${waitingDays} hari)` : '';
+
+    if(!isArchived) {
+        if(x.jalur === "BKK"){
+            bkkCount++;
+            if(tbodyBkk) tbodyBkk.innerHTML += `<tr><td><b>${x.pt}</b></td><td>${x.emailTujuan || '-'}</td><td>${x.posisi || '-'}</td><td><span class='s${stat}'>${stat}${labelWaiting}</span></td><td><button class='btnEdit' onclick='editData(${index})'>Edit</button><button class='btnHapus' onclick='hapus(${index})'>Hapus</button></td></tr>`;
+        }
+        if(x.jalur === "Email"){
+            emailCount++;
+            const mailto = `mailto:${x.emailTujuan}`;
+            if(tbodyEmail) tbodyEmail.innerHTML += `<tr><td><b>${x.pt}</b></td><td><a class="link-action" href="${mailto}">${x.emailTujuan || '-'}</a></td><td>${x.posisi || '-'}</td><td><span class='s${stat}'>${stat}${labelWaiting}</span></td><td><button class='btnEdit' onclick='editData(${index})'>Edit</button><button class='btnHapus' onclick='hapus(${index})'>Hapus</button></td></tr>`;
+        }
+        if(x.jalur === "Website" || x.jalur === "Formulir"){
+            webCount++;
+            const linkHref = x.emailTujuan && /^https?:\/\//.test(x.emailTujuan) ? x.emailTujuan : '#';
+            if(tbodyWeb) tbodyWeb.innerHTML += `<tr><td><b>${x.pt}</b></td><td><a class="link-action" href="${linkHref}" target="_blank">Buka Tautan 🌐</a></td><td>${x.posisi || '-'}</td><td><span class='s${stat}'>${stat}${labelWaiting}</span></td><td><button class='btnEdit' onclick='editData(${index})'>Edit</button><button class='btnHapus' onclick='hapus(${index})'>Hapus</button></td></tr>`;
+        }
+    } else {
+        if(tbodyArsip) {
+            tbodyArsip.innerHTML += `<tr><td><b>${x.pt}</b></td><td>${x.jalur || '-'}</td><td>${x.posisi || '-'}</td><td><span class='s${stat}'>${stat}</span></td><td><button class='btnEdit' onclick='editData(${index})'>Edit</button><button class='btnHapus' onclick='hapus(${index})'>Hapus</button></td></tr>`;
+        }
+    }
+});
+
+if(tbodyJ){
+    jadwalList.forEach(x=>{
+        tbodyJ.innerHTML += `<tr><td><b>${x.pt}</b> <br><span style="color:#94a3b8; font-size:10px;">${x.posisi || ''} (${x.jalur})</span></td><td>${x.tgl ? x.tgl.replace('T',' ') : '-'}</td><td><span class="s${x.status}">${x.status}</span></td></tr>`;
+    });
+}
+
+if(document.getElementById('total')) document.getElementById('total').innerText=data.length;
+if(document.getElementById('tes')) document.getElementById('tes').innerText=tes;
+if(document.getElementById('interview')) document.getElementById('interview').innerText=interview;
+if(document.getElementById('diterima')) document.getElementById('diterima').innerText=diterima;
+if(document.getElementById('menunggu')) document.getElementById('menunggu').innerText=menunggu;
+if(document.getElementById('ditolak')) document.getElementById('ditolak').innerText=ditolak;
+
+if(document.getElementById('bkkCount')) document.getElementById('bkkCount').innerText=bkkCount;
+if(document.getElementById('emailCount')) document.getElementById('emailCount').innerText=emailCount;
+if(document.getElementById('webCount')) document.getElementById('webCount').innerText=webCount;
+if(document.getElementById('arsipCount')) document.getElementById('arsipCount').innerText=arsipCount;
+
+let p=Math.min(data.length/300*100,100);
+const barEl = document.getElementById('bar');
+if(barEl) barEl.style.width=p+'%';
+const progTxt = document.getElementById('progressText');
+if(progTxt) progTxt.innerText=data.length+' / 300';
+
+checkDailyReset();
+const config = JSON.parse(localStorage.getItem('trackerConfig'));
+const harian = JSON.parse(localStorage.getItem('trackerHarian'));
+if(config && harian) {
+    const targetH = config.targetHarian || 5;
+    const countH = harian.count || 0;
+    let sisa = targetH - countH;
+    let statusText = "";
+    if(countH < targetH) {
+        statusText = `Kurang → "Tinggal ${sisa} lagi"`;
+    } else if(countH === targetH) {
+        statusText = `Pas → "Target tercapai"`;
+    } else {
+        statusText = `Lebih → "Melampaui target"`;
+    }
+    const statTxtEl = document.getElementById('targetHarianStatusText');
+    const progHarEl = document.getElementById('progressHarianText');
+    const barHarEl = document.getElementById('barHarian');
+    if(statTxtEl) statTxtEl.innerText = statusText;
+    if(progHarEl) progHarEl.innerText = `${countH} / ${targetH} lamaran dikirim hari ini`;
+    if(barHarEl) barHarEl.style.width = Math.min(countH / targetH * 100, 100) + '%';
+}
+
+let n=document.getElementById('notif14hari');
+if(n){
+    let old=data.filter(d=>d.tgl && (Date.now()-new Date(d.tgl).getTime())>14*24*60*60*1000 && d.status=='Menunggu');
+    n.innerHTML=old.length?('<div class="card" style="border:1px solid #dc2626; background:#3b1818;">⚠ <b>Warning >14 Hari:</b> '+old.map(v=>v.pt).join(', ')+' belum ada respon dari HRD.</div>'):'';
+}
+
+renderJalurStats(bkkCount, emailCount, webCount);
+renderReminder();
+renderAchievements();
+if (document.getElementById('jadwal') && !document.getElementById('jadwal').classList.contains('hidden')) {
+    renderCalendar();
+}
+}
+
+function renderJalurStats(bkk, email, web) {
+    const totalJalur = bkk + email + web;
+    const tbody = document.getElementById('tbodyStatJalur');
+    if(!tbody) return;
+    tbody.innerHTML = `
+        <tr><td>BKK</td><td>${bkk}</td><td>${totalJalur ? Math.round(bkk/totalJalur*100) : 0}%</td></tr>
+        <tr><td>Email</td><td>${email}</td><td>${totalJalur ? Math.round(email/totalJalur*100) : 0}%</td></tr>
+        <tr><td>Website / Form</td><td>${web}</td><td>${totalJalur ? Math.round(web/totalJalur*100) : 0}%</td></tr>
+    `;
+}
+
+function renderReminder(){
+    const el = document.getElementById('notifReminder');
+    if(!el) return;
+    let html = "";
+    const sekarang = new Date();
+    data.forEach(x => {
+        if((x.status === 'Respon' || x.status === 'Tes' || x.status === 'Interview') && x.tgl) {
+            const tglJadwal = new Date(x.tgl);
+            const diffTime = tglJadwal.getTime() - sekarang.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const jamMenit = tglJadwal.toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+            if(diffDays === 1) {
+                html += `<div style="background:#ca8a04; color:#fff; padding:6px; border-radius:6px; margin-bottom:4px; font-size:12px;">🔔 <b>Reminder H-1:</b> Agenda ${x.status} di <b>${x.pt}</b> besok jam ${jamMenit}!</div>`;
+            } else if(tglJadwal.toDateString() === sekarang.toDateString() && diffTime > 0) {
+                html += `<div style="background:#16a34a; color:#fff; padding:6px; border-radius:6px; margin-bottom:4px; font-size:12px;">🚨 <b>Reminder Hari H:</b> Agenda ${x.status} di <b>${x.pt}</b> HARI INI jam ${jamMenit}! Berjuanglah!</div>`;
+            }
+        }
+    });
+    el.innerHTML = html;
+}
+
+function renderAchievements(){
+    const grid = document.getElementById('achievementsGrid');
+    if(!grid) return;
+    const count = data.length;
+    const history = JSON.parse(localStorage.getItem('trackerStatusHistory')) || [];
+    const hasFirstEvent = history.length > 0;
+
+    const achievements = [
+        {id: 'first', text: 'First Event (Lamaran Pertama)', icon: '🚀', check: hasFirstEvent},
+        {id: '1', text: 'Kirim 1 Lamaran', icon: '📝', check: count >= 1},
+        {id: '10', text: 'Kirim 10 Lamaran', icon: '🔥', check: count >= 10},
+        {id: '25', text: 'Kirim 25 Lamaran', icon: '🎯', check: count >= 25},
+        {id: '50', text: 'Kirim 50 Lamaran', icon: '🏆', check: count >= 50},
+        {id: '100', text: 'Kirim 100 Lamaran', icon: '👑', check: count >= 100}
+    ];
+
+    grid.innerHTML = achievements.map(ach => `
+        <div class="ach-card ${ach.check ? 'unlocked' : ''}">
+            <div class="ach-icon">${ach.icon}</div>
+            <b>${ach.text}</b>
+            <div style="font-size:10px; margin-top:4px; color:${ach.check ? '#a3e635':'#64748b'};">${ach.check ? '✔ Terbuka' : '🔒 Terkunci'}</div>
+        </div>
+    `).join('');
+}
+
+function renderCalendar(){
+    const header = document.getElementById('calendarGridHeader');
+    const body = document.getElementById('calendarGridBody');
+    const title = document.getElementById('calendarMonthTitle');
+    if(!header || !body || !title) return;
+
+    const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    const hariNama = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    
+    header.innerHTML = hariNama.map(h => `<div class="calendar-header">${h}</div>`).join('');
+    
+    const thn = currentCalendarDate.getFullYear();
+    const bln = currentCalendarDate.getMonth();
+    title.innerText = `${namaBulan[bln]} ${thn}`;
+
+    const firstDayIndex = new Date(thn, bln, 1).getDay();
+    const lastDay = new Date(thn, bln + 1, 0).getDate();
+    
+    let html = "";
+    for(let i = 0; i < firstDayIndex; i++) {
+        html += `<div class="calendar-day" style="opacity:0.2;"></div>`;
+    }
+
+    const hariIni = new Date();
+
+    for(let d = 1; d <= lastDay; d++) {
+        const tglStr = `${thn}-${String(bln+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const agenda = data.filter(x => x.tgl && x.tgl.startsWith(tglStr) && (x.status === 'Tes' || x.status === 'Interview'));
+        
+        let classDay = "calendar-day";
+        if(agenda.length > 0) classDay += " has-event";
+        if(hariIni.getDate() === d && hariIni.getMonth() === bln && hariIni.getFullYear() === thn) classDay += " today";
+
+        html += `
+            <div class="${classDay}" onclick="showCalendarDayDetails('${tglStr}', ${d})">
+                <b style="font-size:12px;">${d}</b>
+                ${agenda.length > 0 ? `<div style="font-size:9px; background:#ca8a04; padding:1px 2px; border-radius:3px; margin-top:2px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${agenda.length} Event</div>` : ''}
+            </div>
+        `;
+    }
+    body.innerHTML = html;
+}
+
+function changeMonth(dir) {
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + dir);
+    renderCalendar();
+    const details = document.getElementById('calendarDayDetails');
+    if(details) details.classList.add('hidden');
+}
+
+function showCalendarDayDetails(tglStr, dayNum) {
+    const detailBox = document.getElementById('calendarDayDetails');
+    if(!detailBox) return;
+    const agenda = data.filter(x => x.tgl && x.tgl.startsWith(tglStr));
+    if(agenda.length === 0) {
+        detailBox.innerHTML = `<b>Tanggal ${dayNum}:</b> Tidak ada agenda tes atau interview.`;
+        detailBox.classList.remove('hidden');
+        return;
+    }
+    let html = `<b>📅 Detail Kegiatan Tanggal ${dayNum}:</b><table style="margin-top:6px;"><thead><tr><th>PT</th><th>Posisi</th><th>Jalur</th><th>Status</th></tr></thead><tbody>`;
+    agenda.forEach(x => {
+        html += `<tr><td><b>${x.pt}</b></td><td>${x.posisi || 'Operator Produksi'}</td><td>${x.jalur}</td><td><span class="s${x.status}">${x.status}</span></td></tr>`;
+    });
+    html += `</tbody></table>`;
+    detailBox.innerHTML = html;
+    detailBox.classList.remove('hidden');
+}
+
+function bukaGmail(){
+window.open('https://mail.google.com','_blank');
+}
+
+let emailCheck = JSON.parse(localStorage.getItem('emailCheck')||'{}');
+
+function saveEmailCheck(){
+emailCheck={
+    tanggal:new Date().toLocaleDateString('id-ID'),
+    jam:new Date().toLocaleTimeString('id-ID'),
+    gmail:document.getElementById('gmailCheck') ? document.getElementById('gmailCheck').checked : false,
+    yahoo:document.getElementById('yahooCheck') ? document.getElementById('yahooCheck').checked : false,
+    outlook:document.getElementById('outlookCheck') ? document.getElementById('outlookCheck').checked : false
+};
+localStorage.setItem('emailCheck',JSON.stringify(emailCheck));
+const lastChkEl = document.getElementById('lastCheck');
+if(lastChkEl) lastChkEl.innerText= 'Terakhir dicek: '+emailCheck.tanggal+' '+emailCheck.jam;
+}
+
+function exportData(){
+let isi = JSON.stringify(data, null, 2);
+let blob = new Blob([isi], { type:'application/json' });
+let a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = 'backup-lamaran-' + new Date().toISOString().slice(0,10) + '.json';
+a.click();
+}
+
+function loadEmailCheck(){
+let cek=JSON.parse(localStorage.getItem('emailCheck')||'{}');
+if(document.getElementById('gmailCheck')){
+    document.getElementById('gmailCheck').checked=!!cek.gmail;
+    document.getElementById('yahooCheck').checked=!!cek.yahoo;
+    document.getElementById('outlookCheck').checked=!!cek.outlook;
+    if(cek.tanggal && document.getElementById('lastCheck')){
+        document.getElementById('lastCheck').innerText='Terakhir dicek: '+cek.tanggal+' '+(cek.jam||'');
+    }
+}
+let hariIni=new Date().toLocaleDateString('id-ID');
+if(!cek.tanggal || cek.tanggal!==hariIni){
+    setTimeout(()=>{
+        alert('📧 Jangan lupa cek email hari ini!');
+    },500);
+}
+}
+
+function resetSemua(){
+if(confirm('Hapus semua data aplikasi? Semua pengaturan profil, riwayat, dan data lamaran akan direset total.')){
+    data=[];
+    localStorage.removeItem('trackerFinal');
+    localStorage.removeItem('trackerBackup');
+    localStorage.removeItem('trackerConfig');
+    localStorage.removeItem('trackerHarian');
+    localStorage.removeItem('trackerStatusHistory');
+    localStorage.removeItem('dokumenChecklist');
+    checkSetup();
+    render();
+}
+}
+
+document.getElementById('importFile').addEventListener('change',function(e){
+const file=e.target.files[0];
+if(!file) return;
+const reader=new FileReader();
+reader.onload=function(ev){
+try{
+    data=JSON.parse(ev.target.result);
+    save();
+    render();
+    alert('✅ Data berhasil direstore');
+}catch(err){
+    alert('❌ File backup tidak valid');
+}
+};
+reader.readAsText(file);
+});
+
+function initDokumen(){
+let d=JSON.parse(localStorage.getItem('dokumenChecklist')||'{}');
+document.querySelectorAll('.docCheck').forEach(c=>{
+c.checked=!!d[c.dataset.doc];
+c.onchange=function(){
+d[c.dataset.doc]=c.checked;
+localStorage.setItem('dokumenChecklist',JSON.stringify(d));
+};
+});
+}
+
+let quickMenuOpen = false;
+function toggleQuickMenu(){
+    const menu = document.getElementById('quickMenu');
+    if(!menu) return;
+    if(quickMenuOpen){
+        menu.style.display='none';
+        quickMenuOpen=false;
+    }else{
+        menu.style.display='flex';
+        quickMenuOpen=true;
+    }
+}
+function closeQuickMenu(){
+    const menu = document.getElementById('quickMenu');
+    if(menu) menu.style.display='none';
+    quickMenuOpen=false;
+}
+
+window.addEventListener('DOMContentLoaded', function(){
+    checkSetup();
+    initDokumen();
+    loadEmailCheck();
+    render();
+    setTimeout(function(){
+        let s=document.getElementById('splashPremium');
+        if(s) s.style.display='none';
+    },2200);
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+if(typeof emailjs !== 'undefined') {
+    emailjs.init({ publicKey: "YAihPEPGCuCytY5lL" });
+}
+</script>
+</body>
+</html>
